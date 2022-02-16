@@ -110,7 +110,6 @@ cc_defaults {
             shared_libs: [
                 "liblog",
             ],
-            system_shared_libs: ["libc"],
 
             header_libs: ["libcutils_headers"],
 
@@ -127,6 +126,7 @@ cc_defaults {
     export_include_dirs: ["include"],
 
     stl: "none",
+    system_shared_libs: ["libc"],
 }
 
 cc_library {
@@ -173,7 +173,6 @@ cc_library {
                 "src/mapping.c",
                 "src/procattr.c",
                 "src/reject_unknown.c",
-                "src/sestatus.c",
                 "src/setenforce.c",
                 "src/setexecfilecon.c",
                 "src/setfilecon.c",
@@ -201,7 +200,6 @@ cc_library {
                 "src/mapping.c",
                 "src/procattr.c",
                 "src/reject_unknown.c",
-                "src/sestatus.c",
                 "src/setexecfilecon.c",
                 "src/stringrep.c",
             ],
@@ -331,21 +329,4 @@ rust_bindgen {
 
     // This is mainly to run layout tests for generated bindings on the host.
     host_supported: true,
-
-    apex_available: [
-        "com.android.virt",
-        "//apex_available:platform",
-    ],
-}
-
-rust_test {
-    name: "libselinux_bindgen_test",
-    srcs: [
-        ":libselinux_bindgen",
-    ],
-    crate_name: "selinux_bindgen_test",
-    test_suites: ["general-tests"],
-    auto_gen_config: true,
-    clippy_lints: "none",
-    lints: "none",
 }
