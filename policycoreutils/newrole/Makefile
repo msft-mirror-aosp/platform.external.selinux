@@ -5,13 +5,14 @@ BINDIR ?= $(PREFIX)/bin
 MANDIR ?= $(PREFIX)/share/man
 ETCDIR ?= /etc
 LOCALEDIR = $(DESTDIR)$(PREFIX)/share/locale
-PAMH ?= $(shell test -f /usr/include/security/pam_appl.h && echo y)
-AUDITH ?= $(shell test -f /usr/include/libaudit.h && echo y)
+INCLUDEDIR ?= $(PREFIX)/include
+PAMH ?= $(shell test -f $(INCLUDEDIR)/security/pam_appl.h && echo y)
+AUDITH ?= $(shell test -f $(INCLUDEDIR)/libaudit.h && echo y)
 # Enable capabilities to permit newrole to generate audit records.
 # This will make newrole a setuid root program.
 # The capabilities used are: CAP_AUDIT_WRITE.
 AUDIT_LOG_PRIV ?= n
-# Enable capabilities to permit newrole to utilitize the pam_namespace module.
+# Enable capabilities to permit newrole to utilize the pam_namespace module.
 # This will make newrole a setuid root program.
 # The capabilities used are: CAP_SYS_ADMIN, CAP_CHOWN, CAP_FOWNER and
 # CAP_DAC_OVERRIDE. 
