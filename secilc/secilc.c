@@ -268,12 +268,6 @@ int main(int argc, char *argv[])
 		}
 		file_size = filedata.st_size;
 
-		if (!file_size) {
-			fclose(file);
-			file = NULL;
-			continue;
-		}
-
 		buffer = malloc(file_size);
 		rc = fread(buffer, file_size, 1, file);
 		if (rc != 1) {
