@@ -137,18 +137,31 @@ search:
 	 * For each version, try each policy root in turn: an admin-supplied
 	 * /etc copy at version N shadows a vendor /usr/lib copy at the same
 	 * version, but a newer vendor policy still beats an older admin one.
+	 * EACCES is treated as absent so an unreadable file in a writable
+	 * root cannot block the search from reaching a readable vendor copy.
 	 */
 	fd = -1;
-	errno = ENOENT;
-	for (; fd < 0 && errno == ENOENT && vers >= minvers; vers--) {
+	for (; fd < 0 && vers >= minvers; vers--) {
 		const char *const *roots = selinux_policy_roots();
 		for (; *roots; roots++) {
 			snprintf(path, sizeof(path), "%s/policy/policy.%d",
 				 *roots, vers);
 			fd = open(path, O_RDONLY | O_CLOEXEC);
-			if (fd >= 0 || errno != ENOENT)
+			if (fd >= 0)
 				break;
+			if (errno == ENOENT)
+				continue;
+			if (errno == EACCES) {
+				selinux_log(
+					SELINUX_WARNING,
+					"SELinux: Skipping unreadable policy file %s: %m\n",
+					path);
+				continue;
+			}
+			break;
 		}
+		if (fd < 0 && errno != ENOENT && errno != EACCES)
+			break;
 	}
 	if (fd < 0) {
 		selinux_log(

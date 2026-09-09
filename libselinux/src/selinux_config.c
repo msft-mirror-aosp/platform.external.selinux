@@ -90,6 +90,13 @@ static const uint16_t file_path_suffixes_idx[NEL] = {
 #undef L1
 #undef L2
 
+/*
+ * Open the SELinux configuration file, trying each confdir in turn.
+ * ENOENT and EACCES fall through: an unreadable copy in a
+ * higher-priority root must not mask a readable one in a
+ * lower-priority root. Any other error is reported against the
+ * location that produced it.
+ */
 static FILE *open_selinux_config(void)
 {
 	char path[PATH_MAX];
@@ -99,9 +106,10 @@ static FILE *open_selinux_config(void)
 	for (i = 0; selinux_confdirs[i]; i++) {
 		snprintf(path, sizeof(path), "%sconfig", selinux_confdirs[i]);
 		fp = fopen(path, "re");
-		if (fp || errno != ENOENT)
+		if (fp || (errno != ENOENT && errno != EACCES))
 			return fp;
 	}
+	errno = ENOENT;
 	return NULL;
 }
 
@@ -550,15 +558,24 @@ static int selinux_policy_remap(const char *path, const char *root, char *out,
 	return 0;
 }
 
+/*
+ * ENOENT and EACCES fall through to the next configuration root.
+ * EACCES is treated the same as ENOENT so that a file the caller cannot
+ * read cannot mask a readable copy in a lower-priority root; any other
+ * error is returned against the root that produced it. If nothing was
+ * readable, errno is EACCES if any root refused, otherwise ENOENT.
+ */
 FILE *selinux_policy_fopen(const char *path, const char *mode)
 {
 	char alt[PATH_MAX];
 	unsigned int i;
+	int refused = 0;
 	FILE *fp;
 
 	fp = fopen(path, mode);
-	if (fp || errno != ENOENT)
+	if (fp || (errno != ENOENT && errno != EACCES))
 		return fp;
+	refused |= (errno == EACCES);
 
 	__selinux_once(once, init_selinux_config);
 	for (i = 1; selinux_policyroots[i]; i++) {
@@ -566,10 +583,11 @@ FILE *selinux_policy_fopen(const char *path, const char *mode)
 					 sizeof(alt)))
 			break;
 		fp = fopen(alt, mode);
-		if (fp || errno != ENOENT)
+		if (fp || (errno != ENOENT && errno != EACCES))
 			return fp;
+		refused |= (errno == EACCES);
 	}
-	errno = ENOENT;
+	errno = refused ? EACCES : ENOENT;
 	return NULL;
 }
 
@@ -577,11 +595,12 @@ int selinux_policy_open(const char *path, int flags)
 {
 	char alt[PATH_MAX];
 	unsigned int i;
-	int fd;
+	int fd, refused = 0;
 
 	fd = open(path, flags);
-	if (fd >= 0 || errno != ENOENT)
+	if (fd >= 0 || (errno != ENOENT && errno != EACCES))
 		return fd;
+	refused |= (errno == EACCES);
 
 	__selinux_once(once, init_selinux_config);
 	for (i = 1; selinux_policyroots[i]; i++) {
@@ -589,10 +608,11 @@ int selinux_policy_open(const char *path, int flags)
 					 sizeof(alt)))
 			break;
 		fd = open(alt, flags);
-		if (fd >= 0 || errno != ENOENT)
+		if (fd >= 0 || (errno != ENOENT && errno != EACCES))
 			return fd;
+		refused |= (errno == EACCES);
 	}
-	errno = ENOENT;
+	errno = refused ? EACCES : ENOENT;
 	return -1;
 }
 

@@ -117,7 +117,7 @@ const char *const *selinux_policy_roots(void);
 /*
  * Open @path (as returned by one of the selinux_*_path() accessors),
  * falling back through selinux_policy_roots() when the primary path
- * yields ENOENT. Internal-only.
+ * yields ENOENT or EACCES. Internal-only.
  */
 FILE *selinux_policy_fopen(const char *path, const char *mode);
 int selinux_policy_open(const char *path, int flags);
@@ -126,8 +126,11 @@ int selinux_policy_open(const char *path, int flags);
  * Resolve @path against the configuration-root list: write into @out
  * the first remapping under which @out (or @out concatenated with
  * @sibling, when the base file is optional but a sibling such as .bin
- * may exist alone is present. If no root has the file, @out receives
- * @path unchanged and -1 is returned with errno ENOENT. Internal only.
+ * may exist alone) is present. If no root has the file, @out receives
+ * @path unchanged and -1 is returned with errno ENOENT, or if a root
+ * contains the file but it is un-readable and there is no readable
+ * fallback, @out receives @path unchanged and -1 is returned with errno
+ * EACCES. Internal only.
  */
 int selinux_policy_resolve(const char *path, const char *sibling, char *out,
 			   size_t outlen);
