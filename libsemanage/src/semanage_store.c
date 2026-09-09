@@ -564,14 +564,17 @@ char *semanage_conf_path(void)
 
 	/*
 	 * Rooted at each configuration directory, then (for a chroot
-	 * build) fall back to the host directory.
+	 * build) fall back to the host directory. Probe R_OK rather
+	 * than F_OK: semanage_conf_parse() treats a fopen() failure as
+	 * "use compiled-in defaults", so an unreadable higher-priority
+	 * copy would otherwise mask a readable vendor copy under /usr/lib.
 	 */
 	for (i = 0; dirs[i]; i++) {
 		free(conf);
 		if (asprintf(&conf, "%s%s%s", semanage_root(), dirs[i],
 			     SEMANAGE_CONF_FILE) < 0)
 			return NULL;
-		if (access(conf, F_OK) == 0)
+		if (access(conf, R_OK) == 0)
 			return conf;
 	}
 	if (semanage_root()[0] != '\0') {
@@ -580,7 +583,7 @@ char *semanage_conf_path(void)
 			if (asprintf(&conf, "%s%s", dirs[i],
 				     SEMANAGE_CONF_FILE) < 0)
 				return NULL;
-			if (access(conf, F_OK) == 0)
+			if (access(conf, R_OK) == 0)
 				return conf;
 		}
 	}
