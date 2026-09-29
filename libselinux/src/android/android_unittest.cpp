@@ -305,6 +305,8 @@ TEST(AndroidSELinuxPathTest, IsAppDataPath)
 {
 	EXPECT_TRUE(is_app_data_path("/data/data"));
 	EXPECT_TRUE(is_app_data_path("/data/user/0"));
+	EXPECT_TRUE(is_app_data_path("/data/singleton_ce/0"));
+	EXPECT_TRUE(is_app_data_path("/data/singleton_de/0"));
 
 	EXPECT_FALSE(is_app_data_path("/data"));
 }
@@ -321,6 +323,7 @@ TEST(AndroidSELinuxPathTest, IsCredentialEncryptedPath)
 	EXPECT_FALSE(is_credential_encrypted_path("/data"));
 	EXPECT_FALSE(is_credential_encrypted_path("/data/data"));
 	EXPECT_FALSE(is_credential_encrypted_path("/data/user/0"));
+	EXPECT_FALSE(is_credential_encrypted_path("/data/singleton_ce/0"));
 }
 
 TEST(AndroidSELinuxPathTest, ExtractPkgnameAndUserid)
@@ -355,6 +358,20 @@ TEST(AndroidSELinuxPathTest, ExtractPkgnameAndUserid)
 	EXPECT_EQ(extract_pkgname_and_userid(path, &pkgname, &userid), 0);
 	EXPECT_STREQ("com.android.myapp3", pkgname);
 	EXPECT_EQ(userid, 10);
+	free(pkgname);
+	pkgname = NULL;
+
+	path = "/data/singleton_ce/10/com.android.nykcoolapp";
+	EXPECT_EQ(extract_pkgname_and_userid(path, &pkgname, &userid), 0);
+	EXPECT_STREQ("com.android.nykcoolapp", pkgname);
+	EXPECT_EQ(userid, 0);
+	free(pkgname);
+	pkgname = NULL;
+
+	path = "/data/singleton_de/10/com.android.nykcoolapp2";
+	EXPECT_EQ(extract_pkgname_and_userid(path, &pkgname, &userid), 0);
+	EXPECT_STREQ("com.android.nykcoolapp2", pkgname);
+	EXPECT_EQ(userid, 0);
 	free(pkgname);
 	pkgname = NULL;
 }
