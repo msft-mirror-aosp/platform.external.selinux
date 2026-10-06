@@ -18,5 +18,8 @@ third_party {
   }
   security: {
     tag: "NVD-CPE2.3:cpe:/a:selinux_project:selinux:3.10"
+    tag: "android:on_device_usage"
+    tag: "android:privilege_level:privileged"
+    tag: "android:untrusted_input"
   }
 }
