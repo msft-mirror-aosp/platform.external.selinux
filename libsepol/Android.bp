@@ -36,23 +36,41 @@ license {
 cc_defaults {
     name: "libsepol_defaults",
     cflags: [
-      "-D_GNU_SOURCE",
-      "-Wall",
-      "-Werror",
-      "-W",
-      "-Wundef",
-      "-Wshadow",
-      "-Wno-error=missing-noreturn",
-      "-Wmissing-format-attribute",
+        "-D_GNU_SOURCE",
+        "-Wall",
+        "-Werror",
+        "-W",
+        "-Wundef",
+        "-Wshadow",
+        "-Wno-error=missing-noreturn",
+        "-Wmissing-format-attribute",
     ],
     target: {
         bionic: {
-            cflags: ["-DHAVE_REALLOCARRAY"]
+            cflags: ["-DHAVE_REALLOCARRAY"],
+        },
+        glibc_x86_64: {
+            cflags: select(release_flag("RELEASE_USE_LITE_GLIBC"), {
+                true: ["-DHAVE_REALLOCARRAY"],
+                default: [],
+            }),
+        },
+        glibc_x86: {
+            cflags: select(release_flag("RELEASE_USE_LITE_GLIBC"), {
+                true: ["-DHAVE_REALLOCARRAY"],
+                default: [],
+            }),
+        },
+        glibc_arm64: {
+            cflags: ["-DHAVE_REALLOCARRAY"],
+        },
+        glibc_arm: {
+            cflags: ["-DHAVE_REALLOCARRAY"],
         },
         musl: {
-            cflags: ["-DHAVE_REALLOCARRAY"]
-        }
-    }
+            cflags: ["-DHAVE_REALLOCARRAY"],
+        },
+    },
 }
 
 cc_library {
